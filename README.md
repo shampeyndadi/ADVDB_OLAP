@@ -2,8 +2,6 @@
 
 ## 1. Install Dependencies
 
-Run this command in your project root to install all required packages:
-
 npm install
 
 ## 2. Environment Variables 
