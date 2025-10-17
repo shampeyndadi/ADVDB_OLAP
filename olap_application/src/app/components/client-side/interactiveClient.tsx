@@ -17,7 +17,7 @@ export default function InteractiveClient({
     setSelectedQuery(id);
     const res = await fetch(`/api/${id}`);
     const json = await res.json();
-    setData(json);
+    setData(Array.isArray(json) ? json : []);
   }
 
   return (

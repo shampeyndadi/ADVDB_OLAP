@@ -35,7 +35,6 @@ export default function Sidebar({ selectedQuery, setSelectedQuery, runQuery }) {
         </nav>
       </div>
 
-      {/* Footer Section */}
       <div className="text-center text-lg py-3 text-indigo-200 pb-6 border-t border-indigo-500">
         <p>Group 9</p>
         <p>Julian - Foo</p>

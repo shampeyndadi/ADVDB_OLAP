@@ -4,9 +4,9 @@ import { query as db } from "../../db";
 
 export async function GET(
   req: Request,
-  { params }: { params: { query: string } }
+  context: { params: Promise<{ query: string }> }
 ) {
-  const { query } = params;
+  const { query } = await context.params;
   let sql = "";
 
   switch (query) {

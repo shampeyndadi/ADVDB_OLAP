@@ -13,5 +13,5 @@ export default async function Page() {
     ORDER BY avg_rating DESC;
   `);
 
-  return <InteractiveClient initialData={rows} />;
+  return <InteractiveClient initialData={Array.isArray(rows) ? rows : []} />;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bar, Line, Pie, Scatter } from "react-chartjs-2";
+import { Bar, Line, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
 ChartJS.register(
   CategoryScale,
@@ -24,7 +25,8 @@ ChartJS.register(
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 export default function ChartDisplay({ query, data }) {
@@ -37,6 +39,9 @@ export default function ChartDisplay({ query, data }) {
   }
 
   switch (query) {
+    // ===========================================================
+    // ROLL-UP (Bar)
+    // ===========================================================
     case "rollup":
       return (
         <Bar
@@ -46,7 +51,11 @@ export default function ChartDisplay({ query, data }) {
               {
                 label: "Average Rating",
                 data: data.map((d) => d.avg_rating),
-                backgroundColor: "rgba(79, 70, 229, 0.7)",
+                backgroundColor: "rgba(79, 70, 229, 0.6)",
+                borderColor: "rgba(79, 70, 229, 1)",
+                borderWidth: 1,
+                borderRadius: 4,
+                barThickness: 16,
               },
             ],
           }}
@@ -55,14 +64,34 @@ export default function ChartDisplay({ query, data }) {
               title: {
                 display: true,
                 text: "Average Rating per Genre (ROLL-UP)",
+                font: { size: 18, weight: "bold" },
               },
+              legend: { display: true, position: "top" },
             },
             responsive: true,
             maintainAspectRatio: false,
+            elements: {
+              point: { radius: 0 }, // 🔧 no dots
+            },
+            scales: {
+              x: {
+                ticks: { color: "#555", maxRotation: 45, minRotation: 45 },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+              y: {
+                min: 0,
+                max: 10,
+                ticks: { stepSize: 1, color: "#555" },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+            },
           }}
         />
       );
 
+    // ===========================================================
+    // DRILL-DOWN (Line)
+    // ===========================================================
     case "drilldown":
       return (
         <Line
@@ -72,9 +101,13 @@ export default function ChartDisplay({ query, data }) {
               {
                 label: "Average Rating",
                 data: data.map((d) => d.avg_rating),
-                borderColor: "rgba(34,197,94,0.8)",
-                fill: false,
-                tension: 0.2,
+                borderColor: "rgba(34,197,94,0.9)",
+                backgroundColor: "rgba(34,197,94,0.15)",
+                fill: true,
+                tension: 0.3, // smooth line
+                borderWidth: 2,
+                pointRadius: 0, // 🔧 no dots
+                pointHoverRadius: 0, // 🔧 no hover dots
               },
             ],
           }}
@@ -83,14 +116,63 @@ export default function ChartDisplay({ query, data }) {
               title: {
                 display: true,
                 text: "Ratings by Decade per Genre (DRILL-DOWN)",
+                font: { size: 18, weight: "bold" },
+              },
+              legend: {
+                display: true,
+                position: "top",
+                labels: { color: "#333", boxWidth: 20, padding: 10 },
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                backgroundColor: "rgba(0,0,0,0.7)",
+                titleFont: { weight: "bold" },
+                bodyFont: { size: 13 },
+                padding: 10,
               },
             },
             responsive: true,
             maintainAspectRatio: false,
+            elements: {
+              point: { radius: 0 }, // 🔧 removes all dots
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: "Decade",
+                  color: "#555",
+                  font: { weight: "bold" },
+                },
+                ticks: {
+                  color: "#555",
+                  maxRotation: 45,
+                  minRotation: 45,
+                  autoSkip: true,
+                },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: "Average Rating",
+                  color: "#555",
+                  font: { weight: "bold" },
+                },
+                min: 0,
+                max: 10,
+                ticks: { stepSize: 1, color: "#555" },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+            },
           }}
         />
       );
 
+    // ===========================================================
+    // SLICE (Pie)
+    // ===========================================================
     case "slice":
       return (
         <Pie
@@ -98,7 +180,7 @@ export default function ChartDisplay({ query, data }) {
             labels: data.map((d) => d.title_type),
             datasets: [
               {
-                label: "Average Rating",
+                label: "Average Rating (%)",
                 data: data.map((d) => d.avg_rating),
                 backgroundColor: [
                   "#60a5fa",
@@ -107,6 +189,8 @@ export default function ChartDisplay({ query, data }) {
                   "#34d399",
                   "#facc15",
                 ],
+                borderColor: "#fff",
+                borderWidth: 2,
               },
             ],
           }}
@@ -115,6 +199,21 @@ export default function ChartDisplay({ query, data }) {
               title: {
                 display: true,
                 text: "Drama Ratings by Title Type (SLICE)",
+                font: { size: 18, weight: "bold" },
+              },
+              legend: { position: "bottom" },
+              datalabels: {
+                color: "#fff",
+                font: { weight: "bold" },
+                formatter: (value, context) => {
+                  const dataArr = context.chart.data.datasets[0].data;
+                  const total = dataArr.reduce(
+                    (sum, val) => sum + Number(val),
+                    0
+                  );
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${percentage}%`;
+                },
               },
             },
             responsive: true,
@@ -123,6 +222,9 @@ export default function ChartDisplay({ query, data }) {
         />
       );
 
+    // ===========================================================
+    // DICE (Horizontal Bar)
+    // ===========================================================
     case "dice":
       return (
         <Bar
@@ -133,6 +235,7 @@ export default function ChartDisplay({ query, data }) {
                 label: "Average Rating (Comedy, US, 2015+)",
                 data: data.map((d) => d.average_rating),
                 backgroundColor: "rgba(251, 191, 36, 0.7)",
+                borderRadius: 4,
               },
             ],
           }}
@@ -142,24 +245,33 @@ export default function ChartDisplay({ query, data }) {
               title: {
                 display: true,
                 text: "Comedy Titles in US (2015–Present) (DICE)",
+                font: { size: 18, weight: "bold" },
               },
+              legend: { display: true, position: "top" },
             },
             responsive: true,
             maintainAspectRatio: false,
+            elements: {
+              point: { radius: 0 }, // 🔧 ensure no dots appear
+            },
           }}
         />
       );
 
+    // ===========================================================
+    // POPULARITY (Bar)
+    // ===========================================================
     case "popularity":
       return (
         <Bar
           data={{
-            labels: data.map((d) => d.popularity_tier),
+            labels: data.map((d) => d.genre_code || d.popularity_tier),
             datasets: [
               {
                 label: "Average Rating",
                 data: data.map((d) => d.avg_rating),
                 backgroundColor: "rgba(239, 68, 68, 0.7)",
+                borderRadius: 4,
               },
             ],
           }}
@@ -168,14 +280,22 @@ export default function ChartDisplay({ query, data }) {
               title: {
                 display: true,
                 text: "Average Ratings by Popularity Tier (ROLL-UP)",
+                font: { size: 18, weight: "bold" },
               },
+              legend: { display: true, position: "top" },
             },
             responsive: true,
             maintainAspectRatio: false,
+            elements: {
+              point: { radius: 0 }, // 🔧 remove stray points
+            },
           }}
         />
       );
 
+    // ===========================================================
+    // CORRELATION (Textual)
+    // ===========================================================
     case "correlation":
       return (
         <div className="flex flex-col items-center justify-center h-full">
@@ -183,9 +303,9 @@ export default function ChartDisplay({ query, data }) {
             Rating–Votes Correlation
           </h3>
           <p className="text-3xl font-bold text-indigo-600">
-            {data.correlation
-              ? Number(data.correlation).toFixed(3)
-              : "No correlation value"}
+            {Array.isArray(data)
+              ? Number(data[0]?.correlation || 0).toFixed(3)
+              : Number(data.correlation || 0).toFixed(3)}
           </p>
           <p className="text-gray-500 mt-2">
             (1 = strong positive, 0 = none, -1 = negative)
@@ -193,6 +313,9 @@ export default function ChartDisplay({ query, data }) {
         </div>
       );
 
+    // ===========================================================
+    // DEFAULT
+    // ===========================================================
     default:
       return (
         <div className="text-center text-gray-500">Select a valid query.</div>
