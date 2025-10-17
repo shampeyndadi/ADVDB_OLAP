@@ -6,7 +6,7 @@ npm install
 
 ## 2. Environment Variables 
 
-PG_USER=postgres
+PG_USER=postgres__
 PG_PASSWORD=your_password
 PG_HOST=localhost
 PG_PORT=5432
