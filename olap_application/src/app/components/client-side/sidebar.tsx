@@ -14,10 +14,10 @@ export default function Sidebar({ selectedQuery, setSelectedQuery, runQuery }) {
     <aside className="h-screen w-64 bg-indigo-700 text-white flex flex-col justify-between">
       <div>
         <h2 className="text-center text-2xl font-bold py-6 border-b border-indigo-500">
-          OLAP Menu
+          Menu
         </h2>
 
-        <nav className="mt-4 flex flex-col">
+        <nav className="mt-4 flex flex-col hover:cursor-pointer">
           {queries.map((q) => (
             <button
               key={q.id}
@@ -36,9 +36,9 @@ export default function Sidebar({ selectedQuery, setSelectedQuery, runQuery }) {
       </div>
 
       {/* Footer Section */}
-      <div className="text-center text-xs text-indigo-200 pb-6 border-t border-indigo-500">
-        <p>© 2025 MCO1 OLAP Project</p>
-        <p>De La Salle University</p>
+      <div className="text-center text-lg py-3 text-indigo-200 pb-6 border-t border-indigo-500">
+        <p>Group 9</p>
+        <p>Julian - Foo</p>
       </div>
     </aside>
   );
