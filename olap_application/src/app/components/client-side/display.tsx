@@ -29,6 +29,14 @@ ChartJS.register(
   ChartDataLabels
 );
 
+// 🧩 GLOBAL: disable points entirely
+ChartJS.defaults.elements.point.radius = 0;
+ChartJS.defaults.elements.point.hoverRadius = 0;
+ChartJS.defaults.elements.point.pointStyle = false;
+
+// 🧩 GLOBAL: disable datalabels by default
+ChartJS.unregister(ChartDataLabels);
+
 export default function ChartDisplay({ query, data }) {
   if (!data || data.length === 0) {
     return (
@@ -39,9 +47,6 @@ export default function ChartDisplay({ query, data }) {
   }
 
   switch (query) {
-    // ===========================================================
-    // ROLL-UP (Bar)
-    // ===========================================================
     case "rollup":
       return (
         <Bar
@@ -70,9 +75,6 @@ export default function ChartDisplay({ query, data }) {
             },
             responsive: true,
             maintainAspectRatio: false,
-            elements: {
-              point: { radius: 0 }, // 🔧 no dots
-            },
             scales: {
               x: {
                 ticks: { color: "#555", maxRotation: 45, minRotation: 45 },
@@ -89,80 +91,75 @@ export default function ChartDisplay({ query, data }) {
         />
       );
 
-    // ===========================================================
-    // DRILL-DOWN (Line)
-    // ===========================================================
     case "drilldown":
+      // Sort and filter: only top 8 genres overall
+      const genreAverages = {};
+      data.forEach((d) => {
+        genreAverages[d.genre] = (genreAverages[d.genre] || []).concat(
+          d.avg_rating
+        );
+      });
+      const topGenres = Object.entries(genreAverages)
+        .sort(
+          (a, b) =>
+            b[1].reduce((s, v) => s + v, 0) / b[1].length -
+            a[1].reduce((s, v) => s + v, 0) / a[1].length
+        )
+        .slice(0, 8)
+        .map(([g]) => g);
+
+      const decades = [...new Set(data.map((d) => `${d.decade}s`))];
+
+      const datasets = topGenres.map((genre, i) => {
+        const colors = [
+          "#60a5fa",
+          "#f87171",
+          "#34d399",
+          "#a78bfa",
+          "#facc15",
+          "#fb923c",
+          "#f472b6",
+          "#10b981",
+        ];
+        const color = colors[i % colors.length];
+        return {
+          label: genre,
+          data: decades.map((decade) => {
+            const row = data.find(
+              (d) => `${d.decade}s` === decade && d.genre === genre
+            );
+            return row ? row.avg_rating : null;
+          }),
+          backgroundColor: color + "cc",
+        };
+      });
+
       return (
-        <Line
-          data={{
-            labels: data.map((d) => `${d.decade}s`),
-            datasets: [
-              {
-                label: "Average Rating",
-                data: data.map((d) => d.avg_rating),
-                borderColor: "rgba(34,197,94,0.9)",
-                backgroundColor: "rgba(34,197,94,0.15)",
-                fill: true,
-                tension: 0.3, // smooth line
-                borderWidth: 2,
-                pointRadius: 0, // 🔧 no dots
-                pointHoverRadius: 0, // 🔧 no hover dots
-              },
-            ],
-          }}
+        <Bar
+          data={{ labels: decades, datasets }}
           options={{
             plugins: {
               title: {
                 display: true,
-                text: "Ratings by Decade per Genre (DRILL-DOWN)",
+                text: "Average Ratings by Decade (Top 8 Genres)",
                 font: { size: 18, weight: "bold" },
               },
-              legend: {
-                display: true,
-                position: "top",
-                labels: { color: "#333", boxWidth: 20, padding: 10 },
-              },
-              tooltip: {
-                mode: "index",
-                intersect: false,
-                backgroundColor: "rgba(0,0,0,0.7)",
-                titleFont: { weight: "bold" },
-                bodyFont: { size: 13 },
-                padding: 10,
-              },
+              legend: { position: "bottom" },
             },
             responsive: true,
             maintainAspectRatio: false,
-            elements: {
-              point: { radius: 0 }, // 🔧 removes all dots
-            },
             scales: {
               x: {
-                title: {
-                  display: true,
-                  text: "Decade",
-                  color: "#555",
-                  font: { weight: "bold" },
-                },
-                ticks: {
-                  color: "#555",
-                  maxRotation: 45,
-                  minRotation: 45,
-                  autoSkip: true,
-                },
+                stacked: false,
+                title: { display: true, text: "Decade", color: "#555" },
+                ticks: { color: "#555" },
                 grid: { color: "rgba(200,200,200,0.15)" },
               },
               y: {
-                title: {
-                  display: true,
-                  text: "Average Rating",
-                  color: "#555",
-                  font: { weight: "bold" },
-                },
                 min: 0,
                 max: 10,
-                ticks: { stepSize: 1, color: "#555" },
+                title: { display: true, text: "Average Rating", color: "#555" },
+                ticks: { color: "#555" },
                 grid: { color: "rgba(200,200,200,0.15)" },
               },
             },
@@ -170,10 +167,8 @@ export default function ChartDisplay({ query, data }) {
         />
       );
 
-    // ===========================================================
-    // SLICE (Pie)
-    // ===========================================================
     case "slice":
+      ChartJS.register(ChartDataLabels);
       return (
         <Pie
           data={{
@@ -222,9 +217,6 @@ export default function ChartDisplay({ query, data }) {
         />
       );
 
-    // ===========================================================
-    // DICE (Horizontal Bar)
-    // ===========================================================
     case "dice":
       return (
         <Bar
@@ -251,16 +243,10 @@ export default function ChartDisplay({ query, data }) {
             },
             responsive: true,
             maintainAspectRatio: false,
-            elements: {
-              point: { radius: 0 }, // 🔧 ensure no dots appear
-            },
           }}
         />
       );
 
-    // ===========================================================
-    // POPULARITY (Bar)
-    // ===========================================================
     case "popularity":
       return (
         <Bar
@@ -283,19 +269,14 @@ export default function ChartDisplay({ query, data }) {
                 font: { size: 18, weight: "bold" },
               },
               legend: { display: true, position: "top" },
+              datalabels: { display: false },
             },
             responsive: true,
             maintainAspectRatio: false,
-            elements: {
-              point: { radius: 0 }, // 🔧 remove stray points
-            },
           }}
         />
       );
 
-    // ===========================================================
-    // CORRELATION (Textual)
-    // ===========================================================
     case "correlation":
       return (
         <div className="flex flex-col items-center justify-center h-full">
@@ -313,9 +294,6 @@ export default function ChartDisplay({ query, data }) {
         </div>
       );
 
-    // ===========================================================
-    // DEFAULT
-    // ===========================================================
     default:
       return (
         <div className="text-center text-gray-500">Select a valid query.</div>
