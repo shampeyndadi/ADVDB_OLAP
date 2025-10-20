@@ -29,12 +29,10 @@ ChartJS.register(
   ChartDataLabels
 );
 
-// 🧩 GLOBAL: disable points entirely
 ChartJS.defaults.elements.point.radius = 0;
 ChartJS.defaults.elements.point.hoverRadius = 0;
 ChartJS.defaults.elements.point.pointStyle = false;
 
-// 🧩 GLOBAL: disable datalabels by default
 ChartJS.unregister(ChartDataLabels);
 
 export default function ChartDisplay({ query, data }) {
@@ -257,20 +255,18 @@ export default function ChartDisplay({ query, data }) {
       );
 
     case "popularity":
-      // Get all genre columns dynamically (everything except 'decade')
       const genres = Object.keys(data[0]).filter((key) => key !== "decade");
 
-      // Prepare datasets for each genre
       const popularityDatasets = genres.map((genre, i) => {
         const colors = [
-          "#3b82f6", // blue
-          "#f97316", // orange
-          "#10b981", // green
-          "#a855f7", // purple
-          "#ef4444", // red
-          "#14b8a6", // teal
-          "#eab308", // yellow
-          "#f43f5e", // pink
+          "#3b82f6",
+          "#f97316",
+          "#10b981",
+          "#a855f7",
+          "#ef4444",
+          "#14b8a6",
+          "#eab308",
+          "#f43f5e",
         ];
         const color = colors[i % colors.length];
         return {
