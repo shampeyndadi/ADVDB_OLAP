@@ -79,20 +79,20 @@ export async function GET(
 
     case "popularity":
       sql = `
-        SELECT
-            (t.start_year / 10) * 10 AS decade,
-            g.genre_code,
-            ROUND(AVG(f.average_rating), 2) AS avg_rating,
-            COUNT(*) AS movie_count
-        FROM dwh.fact_title_rating f
-        JOIN dwh.dim_title t ON f.title_key = t.title_key
-        JOIN dwh.bridge_title_genre bg ON t.title_key = bg.title_key
-        JOIN dwh.dim_genre g ON bg.genre_key = g.genre_key
-        WHERE t.title_type = 'movie' 
-          AND t.start_year IS NOT NULL
-        GROUP BY decade, g.genre_code
-        HAVING COUNT(*) > 50
-        ORDER BY decade, avg_rating DESC;
+        SELECT * FROM crosstab(
+          $$
+          SELECT (t.start_year / 10) * 10 AS decade,
+                g.genre_code,
+                ROUND(AVG(f.average_rating), 2) AS avg_rating
+          FROM dwh.fact_title_rating f
+          JOIN dwh.bridge_title_genre bg ON f.title_key = bg.title_key
+          JOIN dwh.dim_genre g ON bg.genre_key = g.genre_key
+          JOIN dwh.dim_title t ON f.title_key = t.title_key
+          GROUP BY decade, g.genre_code
+          ORDER BY decade
+          $$,
+          $$ SELECT DISTINCT genre_code FROM dwh.dim_genre ORDER BY genre_code $$
+        ) AS ct(decade INT, action NUMERIC, comedy NUMERIC, drama NUMERIC, horror NUMERIC, sci_fi NUMERIC);
       `;
       break;
 
