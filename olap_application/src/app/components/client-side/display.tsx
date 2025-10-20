@@ -319,6 +319,28 @@ export default function ChartDisplay({ query, data }) {
         />
       );
 
+    case "correlation":
+      const correlationValue = data[0]?.correlation ?? 0;
+
+      return (
+        <div className="flex flex-col justify-center items-center h-full">
+          <h2 className="text-2xl font-bold text-indigo-700 mb-4">
+            Ratings vs Votes (STATISTICAL)
+          </h2>
+          <p className="text-lg text-gray-700 mb-2">Correlation Coefficient:</p>
+          <div className="text-5xl font-extrabold text-indigo-600">
+            {correlationValue.toFixed(3)}
+          </div>
+          <p className="mt-3 text-gray-600 italic">
+            {correlationValue > 0
+              ? "Positive correlation — higher votes tend to align with higher ratings."
+              : correlationValue < 0
+              ? "Negative correlation — more votes often mean lower ratings."
+              : "No significant correlation detected."}
+          </p>
+        </div>
+      );
+
     default:
       return (
         <div className="text-center text-gray-500">Select a valid query.</div>
