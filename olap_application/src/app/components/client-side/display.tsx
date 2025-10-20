@@ -93,56 +93,63 @@ export default function ChartDisplay({ query, data }) {
       );
 
     case "drilldown":
-      // Sort and filter: only top 8 genres overall
-      const genreAverages = {};
+      const genreGroups = {};
       data.forEach((d) => {
-        genreAverages[d.genre] = (genreAverages[d.genre] || []).concat(
-          d.avg_rating
-        );
+        if (!genreGroups[d.genre]) genreGroups[d.genre] = [];
+        genreGroups[d.genre].push({
+          decade: d.decade,
+          avg_rating: d.avg_rating,
+        });
       });
-      const topGenres = Object.entries(genreAverages)
-        .sort(
-          (a, b) =>
-            b[1].reduce((s, v) => s + v, 0) / b[1].length -
-            a[1].reduce((s, v) => s + v, 0) / a[1].length
-        )
+
+      const lineDecades = [...new Set(data.map((d) => `${d.decade}s`))].sort();
+
+      const genreAveragesLine = Object.entries(genreGroups)
+        .map(([genre, rows]) => ({
+          genre,
+          avg: rows.reduce((s, r) => s + r.avg_rating, 0) / rows.length,
+        }))
+        .sort((a, b) => b.avg - a.avg)
         .slice(0, 8)
-        .map(([g]) => g);
+        .map((g) => g.genre);
 
-      const decades = [...new Set(data.map((d) => `${d.decade}s`))];
+      const lineColors = [
+        "#60a5fa",
+        "#f87171",
+        "#34d399",
+        "#a78bfa",
+        "#facc15",
+        "#fb923c",
+        "#f472b6",
+        "#10b981",
+      ];
 
-      const datasets = topGenres.map((genre, i) => {
-        const colors = [
-          "#60a5fa",
-          "#f87171",
-          "#34d399",
-          "#a78bfa",
-          "#facc15",
-          "#fb923c",
-          "#f472b6",
-          "#10b981",
-        ];
-        const color = colors[i % colors.length];
-        return {
-          label: genre,
-          data: decades.map((decade) => {
-            const row = data.find(
-              (d) => `${d.decade}s` === decade && d.genre === genre
-            );
-            return row ? row.avg_rating : null;
-          }),
-          backgroundColor: color + "cc",
-        };
-      });
+      const lineDatasets = genreAveragesLine.map((genre, i) => ({
+        label: genre,
+        data: lineDecades.map((decade) => {
+          const row = data.find(
+            (d) => `${d.decade}s` === decade && d.genre === genre
+          );
+          return row ? row.avg_rating : null;
+        }),
+        borderColor: lineColors[i % lineColors.length],
+        backgroundColor: lineColors[i % lineColors.length] + "33",
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false,
+      }));
 
       return (
-        <Bar
-          data={{ labels: decades, datasets }}
+        <Line
+          data={{
+            labels: lineDecades,
+            datasets: lineDatasets,
+          }}
           options={{
             plugins: {
               title: {
                 display: true,
-                text: "Average Ratings by Decade (Top 8 Genres)",
+                text: "Average Ratings by Decade (Top Genres, DRILL-DOWN)",
                 font: { size: 18, weight: "bold" },
               },
               legend: { position: "bottom" },
@@ -152,7 +159,6 @@ export default function ChartDisplay({ query, data }) {
             maintainAspectRatio: false,
             scales: {
               x: {
-                stacked: false,
                 title: { display: true, text: "Decade", color: "#555" },
                 ticks: { color: "#555" },
                 grid: { color: "rgba(200,200,200,0.15)" },
