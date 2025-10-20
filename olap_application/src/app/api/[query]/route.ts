@@ -83,16 +83,25 @@ export async function GET(
           $$
           SELECT (t.start_year / 10) * 10 AS decade,
                 g.genre_code,
-                ROUND(AVG(f.average_rating), 2) AS avg_rating
+                ROUND(AVG(f.average_rating), 2)
           FROM dwh.fact_title_rating f
           JOIN dwh.bridge_title_genre bg ON f.title_key = bg.title_key
           JOIN dwh.dim_genre g ON bg.genre_key = g.genre_key
           JOIN dwh.dim_title t ON f.title_key = t.title_key
+          WHERE t.start_year IS NOT NULL
+            AND g.genre_code IN ('action', 'comedy', 'drama', 'horror', 'sci-fi')
           GROUP BY decade, g.genre_code
           ORDER BY decade
           $$,
-          $$ SELECT DISTINCT genre_code FROM dwh.dim_genre ORDER BY genre_code $$
-        ) AS ct(decade INT, action NUMERIC, comedy NUMERIC, drama NUMERIC, horror NUMERIC, sci_fi NUMERIC);
+          $$ VALUES ('action'), ('comedy'), ('drama'), ('horror'), ('sci-fi') $$
+        ) AS ct(
+          decade INT, 
+          action NUMERIC, 
+          comedy NUMERIC, 
+          drama NUMERIC, 
+          horror NUMERIC, 
+          sci_fi NUMERIC
+        );
       `;
       break;
 

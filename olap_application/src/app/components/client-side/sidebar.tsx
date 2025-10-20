@@ -6,7 +6,7 @@ export default function Sidebar({ selectedQuery, setSelectedQuery, runQuery }) {
     { id: "drilldown", label: "Ratings by Decade (DRILL-DOWN)" },
     { id: "slice", label: "Drama Title Types (SLICE)" },
     { id: "dice", label: "Comedy in US (DICE)" },
-    { id: "popularity", label: "Ratings by Popularity (ROLL-UP)" },
+    { id: "popularity", label: "Average Ratings per Genre by Decade (PIVOT)" },
     { id: "correlation", label: "Rating vs Votes (STATISTICAL)" },
   ];
 

@@ -251,50 +251,66 @@ export default function ChartDisplay({ query, data }) {
       );
 
     case "popularity":
+      // Get all genre columns dynamically (everything except 'decade')
+      const genres = Object.keys(data[0]).filter((key) => key !== "decade");
+
+      // Prepare datasets for each genre
+      const popularityDatasets = genres.map((genre, i) => {
+        const colors = [
+          "#3b82f6", // blue
+          "#f97316", // orange
+          "#10b981", // green
+          "#a855f7", // purple
+          "#ef4444", // red
+          "#14b8a6", // teal
+          "#eab308", // yellow
+          "#f43f5e", // pink
+        ];
+        const color = colors[i % colors.length];
+        return {
+          label: genre,
+          data: data.map((d) => d[genre]),
+          backgroundColor: color + "cc",
+          borderColor: color,
+          borderWidth: 1,
+          borderRadius: 4,
+        };
+      });
+
       return (
         <Bar
           data={{
-            labels: data.map((d) => d.genre_code || d.popularity_tier),
-            datasets: [
-              {
-                label: "Average Rating",
-                data: data.map((d) => d.avg_rating),
-                backgroundColor: "rgba(239, 68, 68, 0.7)",
-                borderRadius: 4,
-              },
-            ],
+            labels: data.map((d) => `${d.decade}s`),
+            datasets: popularityDatasets,
           }}
           options={{
             plugins: {
               title: {
                 display: true,
-                text: "Average Ratings by Popularity Tier (ROLL-UP)",
+                text: "Average Ratings per Genre by Decade (PIVOT)",
                 font: { size: 18, weight: "bold" },
               },
-              legend: { display: true, position: "top" },
+              legend: { position: "bottom" },
               datalabels: { display: false },
             },
             responsive: true,
             maintainAspectRatio: false,
+            scales: {
+              x: {
+                title: { display: true, text: "Decade", color: "#555" },
+                ticks: { color: "#555" },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+              y: {
+                min: 0,
+                max: 10,
+                title: { display: true, text: "Average Rating", color: "#555" },
+                ticks: { color: "#555" },
+                grid: { color: "rgba(200,200,200,0.15)" },
+              },
+            },
           }}
         />
-      );
-
-    case "correlation":
-      return (
-        <div className="flex flex-col items-center justify-center h-full">
-          <h3 className="text-lg font-semibold mb-2">
-            Rating–Votes Correlation
-          </h3>
-          <p className="text-3xl font-bold text-indigo-600">
-            {Array.isArray(data)
-              ? Number(data[0]?.correlation || 0).toFixed(3)
-              : Number(data.correlation || 0).toFixed(3)}
-          </p>
-          <p className="text-gray-500 mt-2">
-            (1 = strong positive, 0 = none, -1 = negative)
-          </p>
-        </div>
       );
 
     default:
