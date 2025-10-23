@@ -66,7 +66,7 @@ export default function ChartDisplay({ query, data }) {
             plugins: {
               title: {
                 display: true,
-                text: "Average Rating per Genre (ROLL-UP)",
+                text: "Average Rating per Genre Combination (ROLL-UP)",
                 font: { size: 18, weight: "bold" },
               },
               legend: { display: true, position: "top" },
