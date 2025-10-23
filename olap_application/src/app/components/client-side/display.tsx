@@ -135,6 +135,9 @@ export default function ChartDisplay({ query, data }) {
         borderWidth: 2,
         tension: 0.3,
         fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: lineColors[i % lineColors.length],
       }));
 
       return (
@@ -152,6 +155,19 @@ export default function ChartDisplay({ query, data }) {
               },
               legend: { position: "bottom" },
               datalabels: { display: false },
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  label: function (context) {
+                    const rating = context.parsed.y;
+                    return `Rating: ${rating ? rating.toFixed(2) : "N/A"}`;
+                  },
+                },
+              },
+            },
+            interaction: {
+              mode: "nearest",
+              intersect: false,
             },
             responsive: true,
             maintainAspectRatio: false,
