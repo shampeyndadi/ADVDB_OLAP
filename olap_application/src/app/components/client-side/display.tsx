@@ -33,8 +33,6 @@ ChartJS.defaults.elements.point.radius = 0;
 ChartJS.defaults.elements.point.hoverRadius = 0;
 ChartJS.defaults.elements.point.pointStyle = false;
 
-ChartJS.unregister(ChartDataLabels);
-
 export default function ChartDisplay({ query, data }) {
   if (!data || data.length === 0) {
     return (
@@ -191,6 +189,9 @@ export default function ChartDisplay({ query, data }) {
 
     case "slice":
       ChartJS.register(ChartDataLabels);
+
+      const total = data.reduce((sum, d) => sum + Number(d.avg_rating), 0);
+
       return (
         <Pie
           data={{
@@ -208,6 +209,7 @@ export default function ChartDisplay({ query, data }) {
                 ],
                 borderColor: "#fff",
                 borderWidth: 2,
+                parsing: false,
               },
             ],
           }}
@@ -222,12 +224,7 @@ export default function ChartDisplay({ query, data }) {
               datalabels: {
                 color: "#fff",
                 font: { weight: "bold" },
-                formatter: (value, context) => {
-                  const dataArr = context.chart.data.datasets[0].data;
-                  const total = dataArr.reduce(
-                    (sum, val) => sum + Number(val),
-                    0
-                  );
+                formatter: (value) => {
                   const percentage = ((value / total) * 100).toFixed(1);
                   return `${percentage}%`;
                 },
@@ -235,6 +232,10 @@ export default function ChartDisplay({ query, data }) {
             },
             responsive: true,
             maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: "nearest" },
+
+            layout: { padding: { top: 10, bottom: 10 } },
           }}
         />
       );
@@ -333,9 +334,35 @@ export default function ChartDisplay({ query, data }) {
 
     case "correlation":
       const correlationValue = data[0]?.correlation ?? 0;
+      const absValue = Math.abs(correlationValue);
+
+      let interpretation = "";
+
+      if (absValue < 0.1) {
+        interpretation =
+          "Very weak — almost no correlation between votes and ratings.";
+      } else if (absValue < 0.3) {
+        interpretation =
+          "Weak correlation — a small trend exists, but not significant.";
+      } else if (absValue < 0.5) {
+        interpretation =
+          "Moderate correlation — some relationship is noticeable.";
+      } else if (absValue < 0.7) {
+        interpretation =
+          "Strong correlation — votes and ratings tend to move together.";
+      } else {
+        interpretation =
+          "Very strong correlation — votes and ratings are closely linked.";
+      }
+
+      if (correlationValue > 0) {
+        interpretation = "Positive " + interpretation;
+      } else if (correlationValue < 0) {
+        interpretation = "Negative " + interpretation;
+      }
 
       return (
-        <div className="flex flex-col justify-center items-center h-full">
+        <div className="flex flex-col justify-center items-center h-full text-center">
           <h2 className="text-2xl font-bold text-indigo-700 mb-4">
             Ratings vs Votes (STATISTICAL)
           </h2>
@@ -343,13 +370,7 @@ export default function ChartDisplay({ query, data }) {
           <div className="text-5xl font-extrabold text-indigo-600">
             {correlationValue.toFixed(3)}
           </div>
-          <p className="mt-3 text-gray-600 italic">
-            {correlationValue > 0
-              ? "Positive correlation — higher votes tend to align with higher ratings."
-              : correlationValue < 0
-              ? "Negative correlation — more votes often mean lower ratings."
-              : "No significant correlation detected."}
-          </p>
+          <p className="mt-3 text-gray-600 italic">{interpretation}</p>
         </div>
       );
 
